@@ -2,27 +2,25 @@ package com.example.kevinpluck.agecategorizer;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.format.Time;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 
 import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 
 public class MainActivity extends AppCompatActivity {
 
-    private LinearLayout ll;
+    private LinearLayout yearButtonLayout;
+    private LinearLayout monthButtonLayout;
+    private LinearLayout dayButtonLayout;
+    private int[] ageCategoriesArray;
+    private TextView textView;
+    private Calendar date;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,15 +29,22 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        ll = (LinearLayout) findViewById(R.id.yearButtonLayout);
-        generateButtons(Calendar.getInstance(), "14 16 20");
+        yearButtonLayout = (LinearLayout) findViewById(R.id.yearButtonLayout);
+        monthButtonLayout = (LinearLayout) findViewById(R.id.monthButtonLayout);
+        dayButtonLayout = (LinearLayout) findViewById(R.id.dayButtonLayout);
+
+        textView = (TextView) findViewById(R.id.textView2);
+
+        String ageCategories = "9 11 14 16 20";
+        ageCategoriesArray = parseAgeCategories(ageCategories);
+        date = Calendar.getInstance();
+        generateButtons();
     }
 
-    private void generateButtons(Calendar date, String ageCategories) {
+    private void generateButtons() {
 
-        ll.removeAllViews();
+        yearButtonLayout.removeAllViews();
 
-        int[] ageCategoriesArray = parseAgeCategories(ageCategories);
 
         int theYear = date.get(Calendar.YEAR);
         int numberOfCategories = ageCategoriesArray.length;
@@ -71,16 +76,155 @@ public class MainActivity extends AppCompatActivity {
         addDefiniteYearButton((yearForButton+1) + "+",0);
     }
 
-    private void addYearButton(String years, int categoryIndex) {
+    private void addYearButton(String years, final int categoryIndex) {
         Button yearButton = new Button(this);
+        yearButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                clearDay();
+                showMonth(categoryIndex);
+            }
+        });
         yearButton.setText(years.trim());
-        ll.addView(yearButton);
+        yearButtonLayout.addView(yearButton);
     }
 
-    private void addDefiniteYearButton(String years, int categoryIndex) {
+    private void showMonth(final int categoryIndex) {
+        textView.setText("--");
+        monthButtonLayout.removeAllViews();
+
+        int theMonth = date.get(Calendar.MONTH) + 1;
+        MakeMinMonthButton(categoryIndex, theMonth);
+        MakeShowDayButton(categoryIndex, theMonth);
+        MakeMaxMonthButton(categoryIndex, theMonth);
+    }
+
+    private void MakeMaxMonthButton(final int categoryIndex, int theMonth) {
+        monthButtonLayout.addView(makeMaxButton(new View.OnClickListener(){
+            public void onClick(View v){
+                clearDay();
+                showCategory(categoryIndex);
+            }
+        }, theMonth, 12));
+    }
+
+    private View makeMaxButton(View.OnClickListener onClick, int value, int maxValue) {
+        if(maxValue==31)
+            maxValue = date.getActualMaximum(Calendar.DAY_OF_MONTH);
+
+        if(value == maxValue)
+            return makeButton(noClick(), "");
+
+        if(value == maxValue-1)
+            return makeButton(onClick, String.valueOf(maxValue));
+
+        return makeButton(onClick, (value + 1) + " - " +maxValue);
+    }
+
+    private void MakeShowDayButton(final int categoryIndex, int theMonth) {
+        monthButtonLayout.addView(makeButton(new View.OnClickListener(){
+            public void onClick(View view) {
+                showDay(categoryIndex);
+            }
+        }, String.valueOf(theMonth)));
+    }
+
+    private void showDay(int categoryIndex) {
+        textView.setText("--");
+        dayButtonLayout.removeAllViews();
+
+        int theDay = date.get(Calendar.DAY_OF_MONTH);
+
+        MakeMinDayButton(categoryIndex, theDay);
+        MakeDayButton(categoryIndex, theDay);
+        MakeMaxDayButton(categoryIndex, theDay);
+    }
+
+    private void MakeMaxDayButton(final int categoryIndex, int theDay) {
+        dayButtonLayout.addView(makeMaxButton(new View.OnClickListener(){
+            public void onClick(View v){
+                showCategory(categoryIndex);
+            }
+        }, theDay, 31));
+    }
+
+    private void MakeDayButton(final int categoryIndex, int theDay) {
+        dayButtonLayout.addView(makeButton(new View.OnClickListener(){
+            public void onClick(View v){
+                showCategory(categoryIndex + 1);
+            }
+        }, String.valueOf(theDay)));
+    }
+
+    private void MakeMinDayButton(final int categoryIndex, int theDay) {
+        dayButtonLayout.addView(makeMinButton(new View.OnClickListener(){
+            public void onClick(View v){
+                showCategory(categoryIndex + 1);
+            }
+        },theDay));
+    }
+
+    private void MakeMinMonthButton(final int categoryIndex, int theMonth) {
+        monthButtonLayout.addView(makeMinButton(new View.OnClickListener(){
+            public void onClick(View v){
+                clearDay();
+                showCategory(categoryIndex + 1);
+            }
+        },theMonth));
+    }
+
+    private View makeMinButton(View.OnClickListener onClickListener, int value) {
+        if(value == 1)
+            return makeButton(noClick(), "");
+
+        if(value == 2)
+            return makeButton(onClickListener, "1");
+
+        return makeButton(onClickListener, "1 - " + String.valueOf(value - 1));
+    }
+
+    @NonNull
+    private View.OnClickListener noClick() {
+        return new View.OnClickListener(){public void onClick(View v){}};
+    }
+
+    @NonNull
+    private View makeButton(View.OnClickListener onClickListener, String text) {
+        Button button = new Button(this);
+        button.setText(text);
+        button.setOnClickListener(onClickListener);
+        if(text == "") button.setVisibility(View.INVISIBLE);
+        return button;
+    }
+
+    private void addDefiniteYearButton(String years, final int categoryIndex) {
         Button yearButton = new Button(this);
         yearButton.setText(years.trim());
-        ll.addView(yearButton);
+        yearButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                clearMonthAndDay();
+                showCategory(categoryIndex);
+            }
+        });
+        yearButtonLayout.addView(yearButton);
+    }
+
+    private void showCategory(int categoryIndex) {
+        String result;
+        if(categoryIndex >= ageCategoriesArray.length)
+            result = ageCategoriesArray[categoryIndex - 1] + " +";
+        else
+            result = "<" + ageCategoriesArray[categoryIndex];
+
+        textView.setText(result);
+    }
+
+    private void clearMonthAndDay() {
+        monthButtonLayout.removeAllViews();
+        clearDay();
+    }
+
+    private void clearDay() {
+        dayButtonLayout.removeAllViews();
     }
 
     private int[] parseAgeCategories(String ageCategories) {
@@ -114,29 +258,5 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void testbuttonClick(View v){
-        TextView tv = (TextView) findViewById(R.id.textView2);
-        tv.setText("Hello");
-        Button myButton = getButton();
 
-        LinearLayout ll = (LinearLayout) findViewById(R.id.yearButtonLayout);
-        ll.removeAllViews();
-        LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        ll.addView(myButton,lp);
-    }
-
-    @NonNull
-    private Button getButton() {
-        Button myButton = new Button(this);
-        myButton.setText("Push Me");
-
-
-        myButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                TextView tv = (TextView) findViewById(R.id.textView2);
-                tv.setText("Pushed");
-            }
-        });
-        return myButton;
-    }
 }
