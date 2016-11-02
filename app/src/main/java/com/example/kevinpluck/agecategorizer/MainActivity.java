@@ -1,5 +1,6 @@
 package com.example.kevinpluck.agecategorizer;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -19,7 +20,8 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout monthButtonLayout;
     private LinearLayout dayButtonLayout;
     private int[] ageCategoriesArray;
-    private TextView textView;
+    private TextView categoriesTextView;
+    private TextView categoryOutputTextView;
     private Calendar date;
 
     @Override
@@ -33,9 +35,11 @@ public class MainActivity extends AppCompatActivity {
         monthButtonLayout = (LinearLayout) findViewById(R.id.monthButtonLayout);
         dayButtonLayout = (LinearLayout) findViewById(R.id.dayButtonLayout);
 
-        textView = (TextView) findViewById(R.id.textView2);
+        categoriesTextView = (TextView) findViewById(R.id.categoriesTextView);
+        categoryOutputTextView = (TextView) findViewById(R.id.categoryOutputTextView);
 
         String ageCategories = "9 11 14 16 20";
+        categoriesTextView.setText(ageCategories);
         ageCategoriesArray = parseAgeCategories(ageCategories);
         date = Calendar.getInstance();
         generateButtons();
@@ -89,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showMonth(final int categoryIndex) {
-        textView.setText("--");
+        categoryOutputTextView.setText("--");
         monthButtonLayout.removeAllViews();
 
         int theMonth = date.get(Calendar.MONTH) + 1;
@@ -129,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showDay(int categoryIndex) {
-        textView.setText("--");
+        categoryOutputTextView.setText("--");
         dayButtonLayout.removeAllViews();
 
         int theDay = date.get(Calendar.DAY_OF_MONTH);
@@ -215,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
         else
             result = "<" + ageCategoriesArray[categoryIndex];
 
-        textView.setText(result);
+        categoryOutputTextView.setText(result);
     }
 
     private void clearMonthAndDay() {
@@ -258,5 +262,9 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-
+    public void showCategoriesSelector(View v){
+        Intent i = new Intent(getApplicationContext(), CategoriesSelectorActivity.class);
+        i.putExtra("categories", ageCategoriesArray);
+        startActivity(i);
+    }
 }
