@@ -13,12 +13,25 @@
     tools:context="com.example.kevinpluck.agecategorizer.CategoriesSelectorActivity"
     tools:showIn="@layout/activity_categories_selector">
 
-    <GridView
+
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:numColumns="5"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:id="@+id/categoriesSelectorGridView" />
+        android:layout_height="match_parent">
+
+        <Button
+            android:text="OK"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/button3"
+            android:onClick="onOkClick" />
+
+        <GridView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:numColumns="5"
+                android:id="@+id/categoriesSelectorGridView"/>
+    </LinearLayout>
+
+
 </RelativeLayout>

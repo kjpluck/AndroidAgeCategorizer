@@ -10,6 +10,8 @@ import android.widget.Button;
 import android.widget.ListAdapter;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Kevin Pluck on 02-Nov-16.
@@ -18,13 +20,25 @@ public class CategoriesAdapter extends BaseAdapter {
     private static final int maxAge = 100;
     private final boolean[] categories;
     private final CategoriesSelectorActivity context;
-    public CategoriesAdapter(CategoriesSelectorActivity categoriesSelectorActivity, int[] foo) {
+
+    public CategoriesAdapter(CategoriesSelectorActivity categoriesSelectorActivity, ArrayList<Integer> foo) {
 
         categories = new boolean[maxAge];
         for (int aFoo : foo) {
             categories[aFoo - 1] = true;
         }
         context = categoriesSelectorActivity;
+    }
+
+    private void updateAgeCategories()
+    {
+        ArrayList<Integer> ages = new ArrayList<>();
+        for (int i = 0; i < maxAge; i++) {
+            if(categories[i])
+                ages.add(i+1);
+        }
+
+        context.foo = ages;
     }
 
     @Override
@@ -57,6 +71,7 @@ public class CategoriesAdapter extends BaseAdapter {
             @Override
             public void onClick(View view) {
                 categories[i] = !categories[i];
+                updateAgeCategories();
                 CategoriesAdapter.this.notifyDataSetChanged();
             }
         });

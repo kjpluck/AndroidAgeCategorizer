@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -12,6 +13,8 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
@@ -19,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout yearButtonLayout;
     private LinearLayout monthButtonLayout;
     private LinearLayout dayButtonLayout;
-    private int[] ageCategoriesArray;
+    private ArrayList<Integer> ageCategoriesArray = new ArrayList<Integer>(Arrays.asList(9,11,14,16,20));
     private TextView categoriesTextView;
     private TextView categoryOutputTextView;
     private Calendar date;
@@ -38,24 +41,32 @@ public class MainActivity extends AppCompatActivity {
         categoriesTextView = (TextView) findViewById(R.id.categoriesTextView);
         categoryOutputTextView = (TextView) findViewById(R.id.categoryOutputTextView);
 
-        String ageCategories = "9 11 14 16 20";
-        categoriesTextView.setText(ageCategories);
-        ageCategoriesArray = parseAgeCategories(ageCategories);
         date = Calendar.getInstance();
         generateButtons();
     }
 
+    private String joinAgeArray(){
+        String result = "";
+        for(int age: ageCategoriesArray){
+            result += "<" + age + " ";
+        }
+
+        return result;
+    }
+
     private void generateButtons() {
+
+        categoriesTextView.setText(joinAgeArray());
 
         yearButtonLayout.removeAllViews();
 
 
         int theYear = date.get(Calendar.YEAR);
-        int numberOfCategories = ageCategoriesArray.length;
+        int numberOfCategories = ageCategoriesArray.size();
 
         if(numberOfCategories <= 1) return;
 
-        int oldestCategory = ageCategoriesArray[numberOfCategories - 1];
+        int oldestCategory = ageCategoriesArray.get(numberOfCategories - 1);
         int yearForButton = theYear - oldestCategory;
 
         addDefiniteYearButton("-" + (yearForButton-1),numberOfCategories);
@@ -64,9 +75,9 @@ public class MainActivity extends AppCompatActivity {
         String years = "";
         for(int i = numberOfCategories - 2; i >= 0; i--){
 
-            while(yearForButton <= (theYear - ageCategoriesArray[i] - 1)) {
+            while(yearForButton <= (theYear - ageCategoriesArray.get(i) - 1)) {
 
-                if (i >= 0 && yearForButton == (theYear - ageCategoriesArray[i] - 1)) {
+                if (i >= 0 && yearForButton == (theYear - ageCategoriesArray.get(i) - 1)) {
                     addDefiniteYearButton(years, i + 1);
                     years = "";
                 }
@@ -214,10 +225,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void showCategory(int categoryIndex) {
         String result;
-        if(categoryIndex >= ageCategoriesArray.length)
-            result = ageCategoriesArray[categoryIndex - 1] + " +";
+        if(categoryIndex >= ageCategoriesArray.size())
+            result = ageCategoriesArray.get(categoryIndex - 1) + " +";
         else
-            result = "<" + ageCategoriesArray[categoryIndex];
+            result = "<" + ageCategoriesArray.get(categoryIndex);
 
         categoryOutputTextView.setText(result);
     }
@@ -231,14 +242,6 @@ public class MainActivity extends AppCompatActivity {
         dayButtonLayout.removeAllViews();
     }
 
-    private int[] parseAgeCategories(String ageCategories) {
-        String[] strArray = ageCategories.split(" ");
-        int[] intArray = new int[strArray.length];
-        for(int i = 0; i < strArray.length; i++) {
-            intArray[i] = Integer.parseInt(strArray[i]);
-        }
-        return intArray;
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -265,6 +268,15 @@ public class MainActivity extends AppCompatActivity {
     public void showCategoriesSelector(View v){
         Intent i = new Intent(getApplicationContext(), CategoriesSelectorActivity.class);
         i.putExtra("categories", ageCategoriesArray);
-        startActivity(i);
+        startActivityForResult(i, 666);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent Data){
+        if(resultCode == RESULT_OK){
+            Bundle result = Data.getExtras();
+            ageCategoriesArray = result.getIntegerArrayList("categories");
+            generateButtons();
+        }
     }
 }
