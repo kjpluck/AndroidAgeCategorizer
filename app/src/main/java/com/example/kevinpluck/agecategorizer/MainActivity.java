@@ -1,18 +1,20 @@
 package com.example.kevinpluck.agecategorizer;
 
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -23,9 +25,11 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout monthButtonLayout;
     private LinearLayout dayButtonLayout;
     private ArrayList<Integer> ageCategoriesArray = new ArrayList<Integer>(Arrays.asList(9,11,14,16,20));
-    private TextView categoriesTextView;
+    private Button categoriesButton;
     private TextView categoryOutputTextView;
     private Calendar date;
+    private Button asOfDateButton;
+    private DatePickerDialog.OnDateSetListener datePicker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,12 +42,29 @@ public class MainActivity extends AppCompatActivity {
         monthButtonLayout = (LinearLayout) findViewById(R.id.monthButtonLayout);
         dayButtonLayout = (LinearLayout) findViewById(R.id.dayButtonLayout);
 
-        categoriesTextView = (TextView) findViewById(R.id.categoriesTextView);
+        asOfDateButton = (Button) findViewById(R.id.asOfDateButton);
+        categoriesButton = (Button) findViewById(R.id.categoriesTextView);
         categoryOutputTextView = (TextView) findViewById(R.id.categoryOutputTextView);
 
         date = Calendar.getInstance();
+
+        datePicker = new DatePickerDialog.OnDateSetListener() {
+
+            @Override
+            public void onDateSet(DatePicker view, int year, int monthOfYear,
+                                  int dayOfMonth) {
+                date.set(Calendar.YEAR, year);
+                date.set(Calendar.MONTH, monthOfYear);
+                date.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+                showAsOfDate();
+                generateButtons();
+            }
+
+        };
+
         generateButtons();
     }
+
 
     private String joinAgeArray(){
         String result = "";
@@ -55,11 +76,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void generateButtons() {
-
-        categoriesTextView.setText(joinAgeArray());
+        showAsOfDate();
+        categoriesButton.setText(joinAgeArray());
 
         yearButtonLayout.removeAllViews();
-
+        monthButtonLayout.removeAllViews();
+        dayButtonLayout.removeAllViews();
 
         int theYear = date.get(Calendar.YEAR);
         int numberOfCategories = ageCategoriesArray.size();
@@ -89,6 +111,11 @@ public class MainActivity extends AppCompatActivity {
             years="";
         }
         addDefiniteYearButton((yearForButton+1) + "+",0);
+    }
+
+    private void showAsOfDate() {
+        DateFormat dateFormat = android.text.format.DateFormat.getDateFormat(getApplicationContext());
+        asOfDateButton.setText(dateFormat.format(date.getTime()));
     }
 
     private void addYearButton(String years, final int categoryIndex) {
@@ -263,6 +290,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void showDatePicker(View v){
+        new DatePickerDialog(this, datePicker, date
+                .get(Calendar.YEAR), date.get(Calendar.MONTH),
+                date.get(Calendar.DAY_OF_MONTH)).show();
     }
 
     public void showCategoriesSelector(View v){
