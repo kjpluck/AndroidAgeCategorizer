@@ -1,11 +1,13 @@
 package com.example.kevinpluck.agecategorizer;
 
 import android.app.DatePickerDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,6 +16,10 @@ import android.widget.DatePicker;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout yearButtonLayout;
     private LinearLayout monthButtonLayout;
     private LinearLayout dayButtonLayout;
+    private static final String ageCategoriesFilename = "ageCategories";
+    private ArrayList<Integer> defaultAgeCategoriesArray = new ArrayList<Integer>(Arrays.asList(7,9,11,13,15,17,19,21));
     private ArrayList<Integer> ageCategoriesArray = new ArrayList<Integer>(Arrays.asList(9,11,14,16,20));
     private Button categoriesButton;
     private TextView categoryOutputTextView;
@@ -62,22 +70,65 @@ public class MainActivity extends AppCompatActivity {
 
         };
 
+        loadAgeCategories();
         generateButtons();
     }
 
+    private void loadAgeCategories() {
+        try {
+            FileInputStream fis = getApplicationContext().openFileInput(ageCategoriesFilename);
+            InputStreamReader isr = new InputStreamReader(fis);
+            BufferedReader bufferedReader = new BufferedReader(isr);
+            String agesLine = bufferedReader.readLine();
+            ArrayList<String> ages = new ArrayList<>(Arrays.asList(agesLine.split(",")));
 
-    private String joinAgeArray(){
+            ageCategoriesArray = new ArrayList<>();
+            for (String age: ages){
+                if(age == "") continue;
+                ageCategoriesArray.add(Integer.parseInt(age));
+            }
+        } catch (Exception e) {
+            ageCategoriesArray = defaultAgeCategoriesArray;
+            saveAgeCategories();
+        }
+    }
+
+    private void saveAgeCategories() {
+        String filename = ageCategoriesFilename;
+        String string = joinAgeArray(",");
+        FileOutputStream outputStream;
+
+        try {
+            outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
+            outputStream.write(string.getBytes());
+            outputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+    private String joinAgeArray(String separator){
+        return joinAgeArray(separator, false);
+    }
+
+    private String joinAgeArray(String separator, boolean prependSeparator){
         String result = "";
+        String theSeparator = "";
+        if(prependSeparator) theSeparator = separator;
         for(int age: ageCategoriesArray){
-            result += "<" + age + " ";
+            result += theSeparator + age;
+            theSeparator = separator;
         }
 
         return result;
     }
 
     private void generateButtons() {
+        categoryOutputTextView.setText("--");
         showAsOfDate();
-        categoriesButton.setText(joinAgeArray());
+        categoriesButton.setText(joinAgeArray(" <", true));
 
         yearButtonLayout.removeAllViews();
         monthButtonLayout.removeAllViews();
@@ -99,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
 
             while(yearForButton <= (theYear - ageCategoriesArray.get(i) - 1)) {
 
-                if (i >= 0 && yearForButton == (theYear - ageCategoriesArray.get(i) - 1)) {
+                if (i >= 0 && years != "" && yearForButton == (theYear - ageCategoriesArray.get(i) - 1)) {
                     addDefiniteYearButton(years, i + 1);
                     years = "";
                 }
@@ -127,6 +178,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         yearButton.setText(years.trim());
+        yearButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         yearButtonLayout.addView(yearButton);
     }
 
@@ -233,6 +285,7 @@ public class MainActivity extends AppCompatActivity {
     private View makeButton(View.OnClickListener onClickListener, String text) {
         Button button = new Button(this);
         button.setText(text);
+        button.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         button.setOnClickListener(onClickListener);
         if(text == "") button.setVisibility(View.INVISIBLE);
         return button;
@@ -241,6 +294,7 @@ public class MainActivity extends AppCompatActivity {
     private void addDefiniteYearButton(String years, final int categoryIndex) {
         Button yearButton = new Button(this);
         yearButton.setText(years.trim());
+        yearButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         yearButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 clearMonthAndDay();
@@ -309,6 +363,7 @@ public class MainActivity extends AppCompatActivity {
         if(resultCode == RESULT_OK){
             Bundle result = Data.getExtras();
             ageCategoriesArray = result.getIntegerArrayList("categories");
+            saveAgeCategories();
             generateButtons();
         }
     }

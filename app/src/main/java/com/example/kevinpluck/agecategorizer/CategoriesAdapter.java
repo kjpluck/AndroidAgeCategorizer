@@ -48,7 +48,7 @@ public class CategoriesAdapter extends BaseAdapter {
 
     private void enableOkButton(ArrayList<Integer> ages) {
         Button okButton = (Button) context.findViewById(R.id.okButton);
-        okButton.setEnabled(ages.size() > 2);
+        okButton.setEnabled(ages.size() >= 2);
     }
 
     @Override
